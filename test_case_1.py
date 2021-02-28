@@ -5,6 +5,7 @@ from .vars import Test_case_1
 
 
 class TestCase1:
+    # n отвечает за количество секунд с начала эпохи
     def prep(self, n):
         t = time.localtime(n)
         assert not int(time.mktime(t)) % 2, 'Время не кратно двум'

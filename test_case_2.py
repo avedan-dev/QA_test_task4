@@ -2,21 +2,26 @@ import pytest
 import os
 from .vars import Test_case_2
 
+
 class TestCase2:
-    def prep(self,n):
+    # n объем оперативной памяти в гб, которую проверяет тест
+    def prep(self, n):
         with open('/proc/meminfo', 'r') as mem:
             total_mem = 0
             for i in mem:
                 sline = i.split()
                 if str(sline[0]) == 'MemTotal:':
                     total_mem = int(sline[1])
-        assert total_mem // 1024 ** 2 >= 1, f'Объем оперативной памяти меньше {n} Гб'
+        assert total_mem // 1024 ** 2 >= n, f'Объем оперативной памяти меньше {n} Гб'
 
     def clean_up(self):
-        os.remove('test')
+        try:
+            os.remove('test')
+        except FileNotFoundError:
+            print(' Файл не найден')
         assert 'test' not in os.listdir(), 'В директории остался файл test'
 
-    @pytest.fixture(scope="function", autouse=True, params=Test_case_2.PARAMS, ids=Test_case_2.IDS)
+    @pytest.fixture(scope="function", autouse=True, params=Test_case_2.MEM_SIZE, ids=Test_case_2.IDS)
     def setup(self, request):
         self.prep(request.param)
         yield
@@ -27,8 +32,17 @@ class TestCase2:
             f.write(os.urandom(1000))
         assert os.path.getsize('test') == 1000
 
-    @pytest.mark.xfail
-    def test_create_file_failed(self):
-        with open('test_fail', 'wb') as f:
+    @pytest.mark.xfail(reason='Намеренно создали файл с другим названием')
+    @pytest.mark.parametrize("name", Test_case_2.FILE_WRONG_NAMES)
+    def test_create_file_failed(self, name):
+        with open(name, 'wb') as f:
             f.write(os.urandom(1000))
+        os.remove(name)
+        assert os.path.getsize('test') == 1000
+
+    @pytest.mark.xfail(reason='Намеренно создали файл другого размера')
+    @pytest.mark.parametrize("size", Test_case_2.FILE_WRONG_SIZE)
+    def test_create_wrong_size(self, size):
+        with open('test', 'wb') as f:
+            f.write(os.urandom(size))
         assert os.path.getsize('test') == 1000
