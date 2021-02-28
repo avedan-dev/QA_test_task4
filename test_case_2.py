@@ -1,24 +1,24 @@
 import pytest
 import os
-
+from .vars import Test_case_2
 
 class TestCase2:
-    def prep(self):
+    def prep(self,n):
         with open('/proc/meminfo', 'r') as mem:
             total_mem = 0
             for i in mem:
                 sline = i.split()
                 if str(sline[0]) == 'MemTotal:':
                     total_mem = int(sline[1])
-        assert total_mem // 1024 ** 2 >= 1, 'Объем оперативной памяти меньше 1 Гб'
+        assert total_mem // 1024 ** 2 >= 1, f'Объем оперативной памяти меньше {n} Гб'
 
     def clean_up(self):
         os.remove('test')
         assert 'test' not in os.listdir(), 'В директории остался файл test'
 
-    @pytest.fixture(scope="function", autouse=True)
-    def setup(self):
-        self.prep()
+    @pytest.fixture(scope="function", autouse=True, params=Test_case_2.PARAMS, ids=Test_case_2.IDS)
+    def setup(self, request):
+        self.prep(request.param)
         yield
         self.clean_up()
 
@@ -27,8 +27,8 @@ class TestCase2:
             f.write(os.urandom(1000))
         assert os.path.getsize('test') == 1000
 
-'''
-    def test_file_delete(self):
-        os.remove('test')
-        assert 'test' not in os.listdir()
-'''
+    @pytest.mark.xfail
+    def test_create_file_failed(self):
+        with open('test_fail', 'wb') as f:
+            f.write(os.urandom(1000))
+        assert os.path.getsize('test') == 1000
