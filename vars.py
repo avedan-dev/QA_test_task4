@@ -15,6 +15,6 @@ class Test_case_2():
     # Id тестов для разного количества оперативной памяти
     IDS = ['1', '20 Gb']
     # Заведомо неверные имена файлов
-    FILE_WRONG_NAMES = ['testing', 'testted']
+    FILE_WRONG_NAMES = ['testing', '']
     # Заведомо неверные размеры файлов
     FILE_WRONG_SIZE = [2000, 500, 1001, 999, 0, -1]
